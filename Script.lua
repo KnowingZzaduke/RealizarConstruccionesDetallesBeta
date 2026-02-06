@@ -34,18 +34,18 @@ local procesoActivo = false
 -- Herramienta
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "📐 Gestor v20 (Fixed)"
+tool.Name = "📐 Gestor v21 (Sync)"
 tool.Parent = LocalPlayer.Backpack
 
 -- Selección Visual
 local highlightBox = Instance.new("SelectionBox")
-highlightBox.Color3 = Color3.fromRGB(0, 255, 0) -- Verde para indicar listo
+highlightBox.Color3 = Color3.fromRGB(0, 255, 0)
 highlightBox.LineThickness = 0.05
 highlightBox.Parent = workspace
 highlightBox.Adornee = nil
 
 -- ==========================================
--- 🖥️ GUI (TU UI CONSERVADA)
+-- 🖥️ GUI (INTACTA)
 -- ==========================================
 if CoreGui:FindFirstChild("ClonadorProGUI") then CoreGui.ClonadorProGUI:Destroy() end
 
@@ -66,7 +66,7 @@ Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 
 local topBar = Instance.new("Frame"); topBar.Size = UDim2.new(1, 0, 0, 35); topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35); topBar.Parent = mainFrame
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
-local title = Instance.new("TextLabel"); title.Text = "🏗️ REPLICADOR v20"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 255); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
+local title = Instance.new("TextLabel"); title.Text = "🏗️ SYNC BUILDER v21"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 255); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
 local closeMini = Instance.new("TextButton"); closeMini.Text = "-"; closeMini.Size = UDim2.new(0.15, 0, 1, 0); closeMini.Position = UDim2.new(0.85, 0, 0, 0); closeMini.BackgroundTransparency = 1; closeMini.TextColor3 = Color3.fromRGB(200, 200, 200); closeMini.TextSize = 20; closeMini.Font = Enum.Font.GothamBold; closeMini.Parent = topBar
 
 local nameInput = Instance.new("TextBox"); nameInput.PlaceholderText = "Nombre archivo..."; nameInput.Size = UDim2.new(0.65, 0, 0, 30); nameInput.Position = UDim2.new(0.05, 0, 0.12, 0); nameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45); nameInput.TextColor3 = Color3.new(1,1,1); nameInput.Parent = mainFrame; Instance.new("UICorner", nameInput)
@@ -79,7 +79,6 @@ local actionsFrame = Instance.new("Frame"); actionsFrame.Name = "ActionsFrame"; 
 local layoutActions = Instance.new("UIListLayout"); layoutActions.Padding = UDim.new(0, 6); layoutActions.SortOrder = Enum.SortOrder.LayoutOrder; layoutActions.Parent = actionsFrame
 local statusLabel = Instance.new("TextLabel"); statusLabel.Size = UDim2.new(1,0,0,15); statusLabel.Position = UDim2.new(0,0,0.96,0); statusLabel.BackgroundTransparency = 1; statusLabel.TextColor3 = Color3.new(0.5,0.5,0.5); statusLabel.TextSize = 10; statusLabel.Parent = mainFrame
 
--- Funciones UI básicas
 local function hacerArrastrable(frameDrag, frameMover)
     local dragging, dragInput, dragStart, startPos
     frameDrag.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true; dragStart = input.Position; startPos = frameMover.Position end end)
@@ -92,21 +91,18 @@ toggleBtn.MouseButton1Click:Connect(function() menuAbierto = not menuAbierto; if
 closeMini.MouseButton1Click:Connect(function() toggleBtn:Fire() end)
 
 -- ==========================================
--- 🧠 LÓGICA MEJORADA (v20)
+-- 🧠 FUNCIONES DE SOPORTE
 -- ==========================================
-
 function notificar(texto)
     statusLabel.Text = texto
-    game:GetService("StarterGui"):SetCore("SendNotification", {Title="v20 Fixed", Text=texto, Duration=2})
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title="System v21", Text=texto, Duration=1})
 end
 
--- FIX DE SUELO: Solo redondeamos X y Z. Dejamos Y intacta.
 function redondearCFrame(cf)
     local x, y, z = cf.X, cf.Y, cf.Z
-    -- Solo redondeamos posición horizontal para alinear grid
     local rX = math.round(x*10)/10
     local rZ = math.round(z*10)/10
-    -- La Y se queda tal cual viene del cálculo relativo
+    -- Mantenemos la Y original, pero redondeamos X y Z para alinear grid
     return CFrame.new(rX, y, rZ) * (cf - cf.Position)
 end
 
@@ -121,7 +117,7 @@ end
 function esBloqueValido(parte, centroCFrame)
     if not parte:IsA("BasePart") then return false end
     if parte.Name == "Baseplate" or parte.Transparency == 1 then return false end
-    if parte.Name:find("Ghost") then return false end -- Ignorar visualizadores
+    if parte.Name:find("Ghost") then return false end
     if parte.Parent:FindFirstChild("Humanoid") then return false end
 
     local posParte = parte.Position
@@ -129,27 +125,24 @@ function esBloqueValido(parte, centroCFrame)
     local distH = (Vector3.new(posParte.X, 0, posParte.Z) - Vector3.new(posCentro.X, 0, posCentro.Z)).Magnitude
     local distV = posParte.Y - posCentro.Y
     
-    if distH <= RADIO_HORIZONTAL and distV >= -2 and distV <= ALTURA_MAXIMA then
-        return true
-    end
+    if distH <= RADIO_HORIZONTAL and distV >= -2 and distV <= ALTURA_MAXIMA then return true end
     return false
 end
 
--- Detección mejorada
-function encontrarBloqueYSuID(posicionCFrame)
-    -- Buscamos en un radio pequeño
-    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 0.5)
+-- Detección mejorada V21: Busca ID con persistencia
+function encontrarID(posicionCFrame)
+    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 0.4) -- Radio MUY pequeño para ser precisos
     for _, parte in pairs(partesCercanas) do
-        -- Filtro estricto: Que sea BasePart, que no sea fantasma, que no sea Baseplate
-        if parte:IsA("BasePart") and parte.Name ~= "Baseplate" and not parte.Name:find("Ghost") then
+        if parte:IsA("BasePart") and not parte.Name:find("Ghost") and parte.Name ~= "Baseplate" then
             local modeloPadre = parte.Parent
             if modeloPadre then
                 local id = modeloPadre:GetAttribute("Id") or modeloPadre:GetAttribute("ID")
-                if id then return parte, id end
+                -- Si encontramos un ID, es nuestro bloque
+                if id then return id end
             end
         end
     end
-    return nil, nil
+    return nil
 end
 
 function obtenerRotacionJugador()
@@ -166,7 +159,7 @@ end
 -- 🎯 COPIAR
 -- ==========================================
 function copiarEstructura()
-    if not bloqueSeleccionado then return notificar("⚠️ Selecciona el bloque central") end
+    if not bloqueSeleccionado then return notificar("⚠️ Selecciona centro") end
     
     datosGuardados = {}
     local origen = bloqueSeleccionado.CFrame
@@ -182,11 +175,10 @@ function copiarEstructura()
         if esBloqueValido(p, origen) and p ~= visual then
             local rel = origen:Inverse() * p.CFrame
             local tipoExacto = obtenerNombreRealDelBloque(p)
-            
             table.insert(datosGuardados, {
                 Type = tipoExacto,
                 Size = {p.Size.X, p.Size.Y, p.Size.Z},
-                CF = {rel:GetComponents()}, -- Guardamos coordenadas EXACTAS
+                CF = {rel:GetComponents()},
                 Color = {p.Color.R, p.Color.G, p.Color.B},
                 Mat = p.Material.Name
             })
@@ -197,7 +189,7 @@ function copiarEstructura()
 end
 
 -- ==========================================
--- 🏗️ CONSTRUIR (SOLUCIÓN BUGS)
+-- 🏗️ CONSTRUIR v21 (Lógica "Hard Sync")
 -- ==========================================
 function construirConFantasmas()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona destino") end
@@ -208,80 +200,87 @@ function construirConFantasmas()
     if not hrp then return end
 
     procesoActivo = true
-    notificar("🚀 Construyendo con precisión...")
+    notificar("🚀 Iniciando (Modo Seguro)...")
 
     local rotacionDeseada = obtenerRotacionJugador()
     local nuevoCentroCFrame = CFrame.new(bloqueSeleccionado.Position) * rotacionDeseada
-    
-    -- Guardamos posición original para volver al final
     local posOriginalPlayer = hrp.CFrame
     hrp.Anchored = true 
 
     for i, data in pairs(datosGuardados) do
         if not procesoActivo then break end
+        
+        -- Info de progreso
+        if i % 5 == 0 then statusLabel.Text = "Progreso: " .. i .. " / " .. #datosGuardados end
 
-        -- 1. CALCULO PRECISO (Sin redondear Y para evitar atravesar suelo)
+        -- 1. Cálculo de Posición
         local relCF = CFrame.new(unpack(data.CF))
         local cframeFinal = nuevoCentroCFrame * relCF
-        cframeFinal = redondearCFrame(cframeFinal) -- Redondeo suave solo en X/Z
-        
+        cframeFinal = redondearCFrame(cframeFinal)
         local sizeObjetivo = Vector3.new(unpack(data.Size))
         local nombreBloque = data.Type or "part_cube"
 
-        -- 2. VISUAL (Fantasma)
+        -- 2. Visualizador
         local ghost = Instance.new("Part")
         ghost.Name = "Ghost_Visual"
-        ghost.Size = sizeObjetivo
-        ghost.CFrame = cframeFinal
+        ghost.Size = sizeObjetivo; ghost.CFrame = cframeFinal
         ghost.Color = Color3.new(unpack(data.Color or {0.5,0.5,0.5}))
-        ghost.Material = Enum.Material[data.Mat or "Plastic"]
-        ghost.Transparency = TRANSPARENCIA_MOLDE
-        ghost.Anchored = true; ghost.CanCollide = false
-        ghost.Parent = workspace
+        ghost.Material = Enum.Material[data.Mat or "Plastic"]; ghost.Transparency = TRANSPARENCIA_MOLDE
+        ghost.Anchored = true; ghost.CanCollide = false; ghost.Parent = workspace
         table.insert(fantasmasCreados, ghost)
 
-        -- 3. TELEPORT ANTI-COLISIÓN (FIX CLAVE)
-        -- Nos movemos ARRIBA del bloque para no estorbar el spawn
-        hrp.CFrame = CFrame.new(cframeFinal.Position) + Vector3.new(0, 10, 0)
-        -- Miramos hacia abajo
+        -- 3. Teleport Táctico (Arriba para no molestar)
+        hrp.CFrame = CFrame.new(cframeFinal.Position) + Vector3.new(0, 15, 0)
         hrp.CFrame = CFrame.lookAt(hrp.Position, cframeFinal.Position)
         RunService.Heartbeat:Wait()
 
-        -- 4. COLOCAR
-        PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
-
-        -- 5. ESPERAR Y ESCALAR (FIX TIEMPO)
-        local idEncontrado = nil
+        -- 4. Bucle de Insistencia (Hard Sync)
+        local idDetectado = nil
         local intentos = 0
-        
-        -- Aumentado a 30 intentos (3 segundos max) para servidores lentos
-        while not idEncontrado and intentos < 30 do
-            task.wait(0.1)
-            _, idEncontrado = encontrarBloqueYSuID(cframeFinal)
-            intentos = intentos + 1
-        end
+        local maxIntentos = 80 -- 8 segundos máx antes de rendirse
+        local colocadoInicial = false
 
-        if idEncontrado then
-            PlotSystem:InvokeServer("scaleFurniture", idEncontrado, cframeFinal, sizeObjetivo)
-        else
-            -- REINTENTO DE EMERGENCIA (Si falló el primero)
-            warn("Reintentando bloque: " .. nombreBloque)
-            PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
-            task.wait(0.5)
-            _, idEncontrado = encontrarBloqueYSuID(cframeFinal)
-            if idEncontrado then
-                PlotSystem:InvokeServer("scaleFurniture", idEncontrado, cframeFinal, sizeObjetivo)
+        -- Primer intento de colocar
+        PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
+        colocadoInicial = true
+        
+        while not idDetectado and intentos < maxIntentos do
+            if not procesoActivo then break end
+            
+            -- Buscamos el ID
+            idDetectado = encontrarID(cframeFinal)
+            
+            if idDetectado then
+                -- ¡ENCONTRADO! Escalar inmediatamente
+                PlotSystem:InvokeServer("scaleFurniture", idDetectado, cframeFinal, sizeObjetivo)
+                -- Confirmar que se escaló (Opcional: enviar otra vez por si acaso)
+                task.wait(0.05) 
+                break -- Salimos del while para ir al siguiente bloque
+            else
+                -- NO ENCONTRADO AÚN
+                intentos = intentos + 1
+                
+                -- REINTENTO PULSE: Cada 20 intentos (2 segs), volvemos a pedir colocar
+                -- Esto arregla el "paquete perdido"
+                if intentos % 20 == 0 then
+                    statusLabel.Text = "♻️ Reintentando colocar..."
+                    PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
+                end
+                
+                task.wait(0.1) -- Espera breve
             end
         end
-        
-        task.wait(0.05) -- Pausa técnica
+
+        if not idDetectado then
+            warn("❌ Falló bloque: " .. nombreBloque .. " (Skipping)")
+        end
     end
 
     hrp.Anchored = false
     hrp.CFrame = posOriginalPlayer
     procesoActivo = false
-    notificar("✅ Terminado")
-    task.delay(5, function() limpiarFantasmas() end)
+    notificar("✅ Construcción Completada")
+    task.delay(4, function() limpiarFantasmas() end)
 end
 
 function limpiarFantasmas()
@@ -321,4 +320,4 @@ crearBoton("🗑️ LIMPIAR GHOSTS", Color3.fromRGB(50, 50, 50), 5, limpiarFanta
 tool.Equipped:Connect(function(m) actualizarListaArchivos(); m.Button1Down:Connect(function() if m.Target then bloqueSeleccionado=m.Target; highlightBox.Adornee=m.Target; notificar("🎯 "..m.Target.Name) end end); m.KeyDown:Connect(function(k) if k=="k" then copiarEstructura() elseif k=="b" then construirConFantasmas() elseif k=="x" then detenerProceso() elseif k=="z" then vaciarMemoria() end end) end)
 tool.Unequipped:Connect(function() highlightBox.Adornee=nil; bloqueSeleccionado=nil end)
 actualizarListaArchivos()
-notificar("✅ v20: Precisión + Anti-Collision")
+notificar("✅ v21: Hard Sync Activado")
