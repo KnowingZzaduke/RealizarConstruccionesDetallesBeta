@@ -46,7 +46,7 @@ highlightBox.Parent = workspace
 highlightBox.Adornee = nil
 
 -- ==========================================
--- 🖥️ GUI
+-- 🖥️ GUI (DISEÑO MEJORADO)
 -- ==========================================
 if CoreGui:FindFirstChild("ClonadorProGUI") then CoreGui.ClonadorProGUI:Destroy() end
 
