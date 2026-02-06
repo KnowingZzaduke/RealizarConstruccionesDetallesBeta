@@ -22,6 +22,8 @@ local CARPETA_PRINCIPAL = "MisConstruccionesRoblox"
 local RADIO_HORIZONTAL = 45 
 local ALTURA_MAXIMA = 900 
 local TRANSPARENCIA_MOLDE = 0.5 
+-- Aumentamos el tiempo de seguridad para servidores lentos
+local ESPERA_SERVIDOR = 0.3 
 
 if not isfolder(CARPETA_PRINCIPAL) then makefolder(CARPETA_PRINCIPAL) end
 
@@ -34,7 +36,7 @@ local procesoActivo = false
 -- Herramienta
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "📐 Gestor v21 (Sync)"
+tool.Name = "📐 Gestor v22 (Estable)"
 tool.Parent = LocalPlayer.Backpack
 
 -- Selección Visual
@@ -45,19 +47,13 @@ highlightBox.Parent = workspace
 highlightBox.Adornee = nil
 
 -- ==========================================
--- 🖥️ GUI (INTACTA)
+-- 🖥️ GUI
 -- ==========================================
 if CoreGui:FindFirstChild("ClonadorProGUI") then CoreGui.ClonadorProGUI:Destroy() end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ClonadorProGUI"
 if syn and syn.protect_gui then syn.protect_gui(screenGui) elseif gethui then screenGui.Parent = gethui() else screenGui.Parent = CoreGui end
-
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Name = "ToggleMenu"
-toggleBtn.Size = UDim2.new(0, 45, 0, 45); toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0) 
-toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); toggleBtn.Text = "📐"; toggleBtn.TextSize = 25; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Parent = screenGui
-Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"; mainFrame.Size = UDim2.new(0, 230, 0, 420); mainFrame.Position = UDim2.new(0.15, 0, 0.25, 0) 
@@ -66,8 +62,14 @@ Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 
 local topBar = Instance.new("Frame"); topBar.Size = UDim2.new(1, 0, 0, 35); topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35); topBar.Parent = mainFrame
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
-local title = Instance.new("TextLabel"); title.Text = "🏗️ SYNC BUILDER v21"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 255); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
+
+local title = Instance.new("TextLabel"); title.Text = "🏗️ BUILDER v22 (STABLE)"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 255); title.Font = Enum.Font.GothamBold; title.TextSize = 13; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
 local closeMini = Instance.new("TextButton"); closeMini.Text = "-"; closeMini.Size = UDim2.new(0.15, 0, 1, 0); closeMini.Position = UDim2.new(0.85, 0, 0, 0); closeMini.BackgroundTransparency = 1; closeMini.TextColor3 = Color3.fromRGB(200, 200, 200); closeMini.TextSize = 20; closeMini.Font = Enum.Font.GothamBold; closeMini.Parent = topBar
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleMenu"; toggleBtn.Size = UDim2.new(0, 45, 0, 45); toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0) 
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); toggleBtn.Text = "📐"; toggleBtn.TextSize = 25; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Parent = screenGui
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
 
 local nameInput = Instance.new("TextBox"); nameInput.PlaceholderText = "Nombre archivo..."; nameInput.Size = UDim2.new(0.65, 0, 0, 30); nameInput.Position = UDim2.new(0.05, 0, 0.12, 0); nameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45); nameInput.TextColor3 = Color3.new(1,1,1); nameInput.Parent = mainFrame; Instance.new("UICorner", nameInput)
 local btnSave = Instance.new("TextButton"); btnSave.Text = "💾"; btnSave.Size = UDim2.new(0.2, 0, 0, 30); btnSave.Position = UDim2.new(0.75, 0, 0.12, 0); btnSave.BackgroundColor3 = Color3.fromRGB(0, 120, 200); btnSave.TextColor3 = Color3.new(1,1,1); btnSave.Parent = mainFrame; Instance.new("UICorner", btnSave)
@@ -91,18 +93,18 @@ toggleBtn.MouseButton1Click:Connect(function() menuAbierto = not menuAbierto; if
 closeMini.MouseButton1Click:Connect(function() toggleBtn:Fire() end)
 
 -- ==========================================
--- 🧠 FUNCIONES DE SOPORTE
+-- 🧠 FUNCIONES (LÓGICA MEJORADA v22)
 -- ==========================================
 function notificar(texto)
     statusLabel.Text = texto
-    game:GetService("StarterGui"):SetCore("SendNotification", {Title="System v21", Text=texto, Duration=1})
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title="Builder v22", Text=texto, Duration=1})
 end
 
+-- IMPORTANTE: No redondeamos la Y para evitar que se hunda o flote
 function redondearCFrame(cf)
     local x, y, z = cf.X, cf.Y, cf.Z
     local rX = math.round(x*10)/10
     local rZ = math.round(z*10)/10
-    -- Mantenemos la Y original, pero redondeamos X y Z para alinear grid
     return CFrame.new(rX, y, rZ) * (cf - cf.Position)
 end
 
@@ -129,15 +131,15 @@ function esBloqueValido(parte, centroCFrame)
     return false
 end
 
--- Detección mejorada V21: Busca ID con persistencia
+-- BÚSQUEDA AMPLIA (FIX CLAVE)
+-- Buscamos en 3 studs de radio. Si el juego mueve el bloque al grid, lo encontraremos igual.
 function encontrarID(posicionCFrame)
-    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 0.4) -- Radio MUY pequeño para ser precisos
+    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 3.0) 
     for _, parte in pairs(partesCercanas) do
         if parte:IsA("BasePart") and not parte.Name:find("Ghost") and parte.Name ~= "Baseplate" then
             local modeloPadre = parte.Parent
             if modeloPadre then
                 local id = modeloPadre:GetAttribute("Id") or modeloPadre:GetAttribute("ID")
-                -- Si encontramos un ID, es nuestro bloque
                 if id then return id end
             end
         end
@@ -189,7 +191,7 @@ function copiarEstructura()
 end
 
 -- ==========================================
--- 🏗️ CONSTRUIR v21 (Lógica "Hard Sync")
+-- 🏗️ CONSTRUIR v22 (Lógica Estable)
 -- ==========================================
 function construirConFantasmas()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona destino") end
@@ -200,7 +202,7 @@ function construirConFantasmas()
     if not hrp then return end
 
     procesoActivo = true
-    notificar("🚀 Iniciando (Modo Seguro)...")
+    notificar("🚀 Construyendo (Modo Seguro)...")
 
     local rotacionDeseada = obtenerRotacionJugador()
     local nuevoCentroCFrame = CFrame.new(bloqueSeleccionado.Position) * rotacionDeseada
@@ -210,10 +212,9 @@ function construirConFantasmas()
     for i, data in pairs(datosGuardados) do
         if not procesoActivo then break end
         
-        -- Info de progreso
-        if i % 5 == 0 then statusLabel.Text = "Progreso: " .. i .. " / " .. #datosGuardados end
+        statusLabel.Text = "Bloque: " .. i .. " / " .. #datosGuardados
 
-        -- 1. Cálculo de Posición
+        -- 1. Datos
         local relCF = CFrame.new(unpack(data.CF))
         local cframeFinal = nuevoCentroCFrame * relCF
         cframeFinal = redondearCFrame(cframeFinal)
@@ -229,50 +230,49 @@ function construirConFantasmas()
         ghost.Anchored = true; ghost.CanCollide = false; ghost.Parent = workspace
         table.insert(fantasmasCreados, ghost)
 
-        -- 3. Teleport Táctico (Arriba para no molestar)
+        -- 3. Teleport (Más alto para evitar colisión total)
         hrp.CFrame = CFrame.new(cframeFinal.Position) + Vector3.new(0, 15, 0)
         hrp.CFrame = CFrame.lookAt(hrp.Position, cframeFinal.Position)
         RunService.Heartbeat:Wait()
 
-        -- 4. Bucle de Insistencia (Hard Sync)
+        -- 4. COLOCAR (SIN SPAM)
+        -- Enviamos una vez y confiamos en el servidor por un momento
+        PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
+        
+        -- Espera técnica obligatoria (el servidor necesita respirar)
+        task.wait(ESPERA_SERVIDOR) 
+
+        -- 5. VERIFICAR Y ESCALAR
         local idDetectado = nil
         local intentos = 0
-        local maxIntentos = 80 -- 8 segundos máx antes de rendirse
-        local colocadoInicial = false
+        local maxIntentos = 25 -- ~5 segundos de espera máxima
 
-        -- Primer intento de colocar
-        PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
-        colocadoInicial = true
-        
         while not idDetectado and intentos < maxIntentos do
             if not procesoActivo then break end
             
-            -- Buscamos el ID
+            -- Buscamos con el radio ampliado (3 studs)
             idDetectado = encontrarID(cframeFinal)
             
             if idDetectado then
-                -- ¡ENCONTRADO! Escalar inmediatamente
+                -- ¡ENCONTRADO! Escalar
                 PlotSystem:InvokeServer("scaleFurniture", idDetectado, cframeFinal, sizeObjetivo)
-                -- Confirmar que se escaló (Opcional: enviar otra vez por si acaso)
-                task.wait(0.05) 
-                break -- Salimos del while para ir al siguiente bloque
+                task.wait(0.1) -- Pausa breve antes del siguiente bloque
+                break 
             else
-                -- NO ENCONTRADO AÚN
                 intentos = intentos + 1
-                
-                -- REINTENTO PULSE: Cada 20 intentos (2 segs), volvemos a pedir colocar
-                -- Esto arregla el "paquete perdido"
-                if intentos % 20 == 0 then
-                    statusLabel.Text = "♻️ Reintentando colocar..."
-                    PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
+                -- Si llevamos 2 segundos (10 intentos) y nada, hacemos UN SOLO reintento
+                if intentos == 10 then
+                   -- warn("Reenviando paquete perdido...")
+                   PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
                 end
-                
-                task.wait(0.1) -- Espera breve
+                task.wait(0.2)
             end
         end
 
         if not idDetectado then
-            warn("❌ Falló bloque: " .. nombreBloque .. " (Skipping)")
+            -- Si falla, NO paramos, solo lo registramos y seguimos.
+            -- Esto evita que una silla bugeada detenga toda la casa.
+            warn("⚠️ Saltando bloque problemático: " .. nombreBloque)
         end
     end
 
@@ -320,4 +320,4 @@ crearBoton("🗑️ LIMPIAR GHOSTS", Color3.fromRGB(50, 50, 50), 5, limpiarFanta
 tool.Equipped:Connect(function(m) actualizarListaArchivos(); m.Button1Down:Connect(function() if m.Target then bloqueSeleccionado=m.Target; highlightBox.Adornee=m.Target; notificar("🎯 "..m.Target.Name) end end); m.KeyDown:Connect(function(k) if k=="k" then copiarEstructura() elseif k=="b" then construirConFantasmas() elseif k=="x" then detenerProceso() elseif k=="z" then vaciarMemoria() end end) end)
 tool.Unequipped:Connect(function() highlightBox.Adornee=nil; bloqueSeleccionado=nil end)
 actualizarListaArchivos()
-notificar("✅ v21: Hard Sync Activado")
+notificar("✅ v22: Modo Estable Activado")
