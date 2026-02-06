@@ -21,7 +21,7 @@ local PlotSystem = Remotes:WaitForChild("PlotSystem")
 local CARPETA_PRINCIPAL = "MisConstruccionesRoblox" 
 local RADIO_HORIZONTAL = 45 
 local ALTURA_MAXIMA = 900 
-local TRANSPARENCIA_MOLDE = 0.5 
+local TRANSPARENCIA_VISUAL = 0.5
 
 if not isfolder(CARPETA_PRINCIPAL) then makefolder(CARPETA_PRINCIPAL) end
 
@@ -30,17 +30,17 @@ local fantasmasCreados = {}
 local bloqueSeleccionado = nil 
 local menuAbierto = true
 local procesoActivo = false 
-local noclipConnection = nil
+local connectionGodMode = nil
 
 -- Herramienta
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "📐 Gestor v23 (Noclip)"
+tool.Name = "📐 GESTOR v25 (ROBUST)"
 tool.Parent = LocalPlayer.Backpack
 
 -- Selección Visual
 local highlightBox = Instance.new("SelectionBox")
-highlightBox.Color3 = Color3.fromRGB(0, 255, 0)
+highlightBox.Color3 = Color3.fromRGB(0, 255, 100)
 highlightBox.LineThickness = 0.05
 highlightBox.Parent = workspace
 highlightBox.Adornee = nil
@@ -62,12 +62,12 @@ Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 local topBar = Instance.new("Frame"); topBar.Size = UDim2.new(1, 0, 0, 35); topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30); topBar.Parent = mainFrame
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
 
-local title = Instance.new("TextLabel"); title.Text = "🏗️ BUILDER v23"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 255); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
+local title = Instance.new("TextLabel"); title.Text = "🛡️ ROBUST v25"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(255, 50, 50); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
 local closeMini = Instance.new("TextButton"); closeMini.Text = "-"; closeMini.Size = UDim2.new(0.15, 0, 1, 0); closeMini.Position = UDim2.new(0.85, 0, 0, 0); closeMini.BackgroundTransparency = 1; closeMini.TextColor3 = Color3.fromRGB(200, 200, 200); closeMini.TextSize = 20; closeMini.Font = Enum.Font.GothamBold; closeMini.Parent = topBar
 
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "ToggleMenu"; toggleBtn.Size = UDim2.new(0, 45, 0, 45); toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0) 
-toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); toggleBtn.Text = "📐"; toggleBtn.TextSize = 25; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Parent = screenGui
+toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); toggleBtn.Text = "📐"; toggleBtn.TextSize = 25; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Parent = screenGui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
 
 local nameInput = Instance.new("TextBox"); nameInput.PlaceholderText = "Nombre archivo..."; nameInput.Size = UDim2.new(0.65, 0, 0, 30); nameInput.Position = UDim2.new(0.05, 0, 0.10, 0); nameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45); nameInput.TextColor3 = Color3.new(1,1,1); nameInput.Parent = mainFrame; Instance.new("UICorner", nameInput)
@@ -92,51 +92,60 @@ toggleBtn.MouseButton1Click:Connect(function() menuAbierto = not menuAbierto; if
 closeMini.MouseButton1Click:Connect(function() toggleBtn:Fire() end)
 
 -- ==========================================
--- 🛡️ SISTEMA DE SEGURIDAD Y FÍSICA
+-- 🛡️ SISTEMA DE SEGURIDAD (GOD MODE)
 -- ==========================================
 
-function activarNoclip()
-    if noclipConnection then noclipConnection:Disconnect() end
-    local char = LocalPlayer.Character
-    if not char then return end
+function activarGodMode()
+    if connectionGodMode then connectionGodMode:Disconnect() end
     
-    -- Desactivar sentarse
-    local hum = char:FindFirstChild("Humanoid")
-    if hum then 
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false) 
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    -- Forzar estado inicial
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        char.Humanoid.Sit = false
     end
 
-    -- Bucle Noclip (Atravesar paredes)
-    noclipConnection = RunService.Stepped:Connect(function()
+    connectionGodMode = RunService.Stepped:Connect(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        
+        -- 1. NOCLIP TOTAL
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
-        -- Congelar caída para "volar"
+        
+        -- 2. ANTI-SIT FORZOSO
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then
+            -- Si intenta sentarse, lo levantamos inmediatamente
+            if hum.Sit then hum.Sit = false end
+            hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        end
+        
+        -- 3. ANTI-CAÍDA (Vuelo estático)
         if char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+            char.HumanoidRootPart.Velocity = Vector3.new(0,0,0) -- Congela velocidad
         end
     end)
 end
 
-function desactivarNoclip()
-    if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end
+function desactivarGodMode()
+    if connectionGodMode then connectionGodMode:Disconnect(); connectionGodMode = nil end
     local char = LocalPlayer.Character
-    if not char then return end
-    local hum = char:FindFirstChild("Humanoid")
-    if hum then hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true) end
+    if char and char:FindFirstChild("Humanoid") then 
+        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true) 
+    end
 end
 
 function notificar(texto)
     statusLabel.Text = texto
-    game:GetService("StarterGui"):SetCore("SendNotification", {Title="Builder v23", Text=texto, Duration=1.5})
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title="Robust v25", Text=texto, Duration=1.5})
 end
 
 function obtenerNombreRealDelBloque(parte)
     if parte.Parent and parte.Parent:IsA("Model") then
         local nombreModelo = parte.Parent.Name
-        if nombreModelo ~= "Model" and nombreModelo ~= "Folder" then return nombreModelo end
+        if nombreModelo ~= "Model" and nombreModelo ~= "Folder" and nombreModelo ~= "Terrenos" then return nombreModelo end
     end
     return "part_cube" 
 end
@@ -146,19 +155,15 @@ function esBloqueValido(parte, centroCFrame)
     if parte.Name == "Baseplate" or parte.Transparency == 1 then return false end
     if parte.Name:find("Ghost") then return false end
     if parte.Parent:FindFirstChild("Humanoid") then return false end
-
-    local posParte = parte.Position
-    local posCentro = centroCFrame.Position
-    local distH = (Vector3.new(posParte.X, 0, posParte.Z) - Vector3.new(posCentro.X, 0, posCentro.Z)).Magnitude
-    local distV = posParte.Y - posCentro.Y
     
-    if distH <= RADIO_HORIZONTAL and distV >= -2 and distV <= ALTURA_MAXIMA then return true end
+    -- Filtro de distancia simple
+    if (parte.Position - centroCFrame.Position).Magnitude < RADIO_HORIZONTAL * 1.5 then return true end
     return false
 end
 
-function encontrarID(posicionCFrame)
-    -- Radio de 3 studs para asegurar detección
-    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 3.5) 
+function buscarIDEnRadio(posicionCFrame)
+    -- Radio amplio (4 studs) por si el juego alinea a la rejilla
+    local partesCercanas = workspace:GetPartBoundsInRadius(posicionCFrame.Position, 4.0) 
     for _, parte in pairs(partesCercanas) do
         if parte:IsA("BasePart") and not parte.Name:find("Ghost") and parte.Name ~= "Baseplate" then
             local modeloPadre = parte.Parent
@@ -182,7 +187,7 @@ function obtenerRotacionJugador()
 end
 
 -- ==========================================
--- 🎯 COPIAR
+-- 🎯 1. COPIAR (MÉTODO v15 PURO)
 -- ==========================================
 function copiarEstructura()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona centro") end
@@ -194,13 +199,15 @@ function copiarEstructura()
     local visual = Instance.new("Part")
     visual.Shape = Enum.PartType.Cylinder; visual.Size = Vector3.new(1, RADIO_HORIZONTAL*2, RADIO_HORIZONTAL*2) 
     visual.CFrame = origen * CFrame.Angles(0,0,math.rad(90)) + Vector3.new(0, 5, 0)
-    visual.Transparency = 0.9; visual.Color = Color3.fromRGB(255, 255, 0); visual.Anchored = true; visual.CanCollide = false; visual.Parent = workspace
+    visual.Transparency = 0.9; visual.Color = Color3.fromRGB(0, 255, 100); visual.Anchored = true; visual.CanCollide = false; visual.Parent = workspace
     Debris:AddItem(visual, 2)
 
     for _, p in pairs(workspace:GetDescendants()) do
         if esBloqueValido(p, origen) and p ~= visual then
+            -- Copia exacta relativa
             local rel = origen:Inverse() * p.CFrame
             local tipoExacto = obtenerNombreRealDelBloque(p)
+            
             table.insert(datosGuardados, {
                 Type = tipoExacto,
                 Size = {p.Size.X, p.Size.Y, p.Size.Z},
@@ -215,45 +222,90 @@ function copiarEstructura()
 end
 
 -- ==========================================
--- 👁️ SOLO VISUALIZAR (NUEVO)
+-- 👁️ 2. VISUALIZAR
 -- ==========================================
 function visualizarConstruccion()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona destino") end
     if #datosGuardados == 0 then return notificar("⚠️ Archivo vacío") end
     
-    limpiarFantasmas() -- Limpiar anteriores
-    notificar("👁️ Generando Visualización...")
+    limpiarFantasmas()
+    notificar("👁️ Renderizando...")
 
     local rotacionDeseada = obtenerRotacionJugador()
     local nuevoCentroCFrame = CFrame.new(bloqueSeleccionado.Position) * rotacionDeseada
 
     for i, data in pairs(datosGuardados) do
-        if i % 50 == 0 then task.wait() end -- Evitar lag si son muchos
+        if i % 100 == 0 then task.wait() end
 
         local relCF = CFrame.new(unpack(data.CF))
-        local cframeFinal = nuevoCentroCFrame * relCF -- SIN REDONDEO, MATEMÁTICA PURA
+        local cframeFinal = nuevoCentroCFrame * relCF
         local sizeObjetivo = Vector3.new(unpack(data.Size))
         
         local ghost = Instance.new("Part")
         ghost.Name = "Ghost_Preview"
         ghost.Size = sizeObjetivo; ghost.CFrame = cframeFinal
-        ghost.Color = Color3.fromRGB(255, 255, 0) -- Amarillo para preview
-        ghost.Material = Enum.Material.Neon
-        ghost.Transparency = 0.6
+        ghost.Color = Color3.new(unpack(data.Color or {1,1,1}))
+        ghost.Material = Enum.Material[data.Mat or "Plastic"]
+        ghost.Transparency = TRANSPARENCIA_VISUAL
         ghost.Anchored = true; ghost.CanCollide = false; ghost.Parent = workspace
         
-        -- Borde visual
-        local sel = Instance.new("SelectionBox", ghost)
-        sel.Adornee = ghost; sel.Color3 = Color3.new(1,1,0); sel.LineThickness = 0.02
-
         table.insert(fantasmasCreados, ghost)
     end
-    notificar("👁️ Visualización lista")
+    notificar("👁️ Hecho")
 end
 
 -- ==========================================
--- 🏗️ CONSTRUIR v23
+-- 🏗️ 3. CONSTRUCCIÓN ROBUSTA (SI O SI)
 -- ==========================================
+
+function colocarBloqueSeguro(nombre, cframePos, sizeObj, index)
+    local logrado = false
+    local intentosRetry = 0
+    local maxRetries = 3 -- Si falla, reintenta ponerlo 3 veces
+
+    while not logrado and intentosRetry < maxRetries do
+        if not procesoActivo then return end
+
+        -- 1. Intentar Colocar
+        -- Algunos juegos devuelven el ID directamente en el Invoke. Capturamos por si acaso.
+        local resultado = PlotSystem:InvokeServer("placeFurniture", nombre, cframePos)
+        
+        -- 2. Esperar Confirmación (Búsqueda Agresiva)
+        local tiempoInicio = tick()
+        local idEncontrado = nil
+        
+        -- Si el server devolvió algo que parece un ID, úsalo
+        if type(resultado) == "string" or type(resultado) == "number" then
+            idEncontrado = resultado
+        end
+
+        -- Si no tenemos ID, buscamos fisicamente en el mapa durante 1.8 segundos
+        if not idEncontrado then
+            while tick() - tiempoInicio < 1.8 do
+                if not procesoActivo then return end
+                idEncontrado = buscarIDEnRadio(cframePos)
+                if idEncontrado then break end
+                RunService.Heartbeat:Wait() -- Chequeo ultra rápido
+            end
+        end
+
+        if idEncontrado then
+            -- 3. Escalar (ÉXITO)
+            PlotSystem:InvokeServer("scaleFurniture", idEncontrado, cframePos, sizeObj)
+            -- Intentamos pintar también por si acaso
+            -- PlotSystem:InvokeServer("paintFurniture", idEncontrado, colorObj) 
+            logrado = true
+            statusLabel.Text = "Bloque " .. index .. ": OK"
+        else
+            -- 4. FALLO -> REINTENTAR
+            intentosRetry = intentosRetry + 1
+            statusLabel.Text = "Bloque " .. index .. ": Reintentando ("..intentosRetry..")"
+            warn("Bloque "..index.." falló. Reenviando paquete...")
+            task.wait(0.5) -- Breve pausa antes de spamear de nuevo
+        end
+    end
+end
+
 function construirReal()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona destino") end
     if #datosGuardados == 0 then return notificar("⚠️ Archivo vacío") end
@@ -263,62 +315,33 @@ function construirReal()
     if not hrp then return end
 
     procesoActivo = true
-    limpiarFantasmas() -- Borramos la preview para empezar a construir
-    activarNoclip() -- MODO DIOS: ON
+    limpiarFantasmas()
+    activarGodMode() -- Activa Noclip y Anti-Sit
 
-    notificar("🚀 Construyendo (Modo Noclip)...")
+    notificar("🚀 Construyendo (Modo Seguro)...")
 
     local rotacionDeseada = obtenerRotacionJugador()
     local nuevoCentroCFrame = CFrame.new(bloqueSeleccionado.Position) * rotacionDeseada
     
-    -- Guardar posición original
     local posOriginalPlayer = hrp.CFrame
 
     for i, data in pairs(datosGuardados) do
         if not procesoActivo then break end
         
-        statusLabel.Text = "Bloque: " .. i .. " / " .. #datosGuardados
-
-        -- 1. Cálculo EXACTO (Sin redondeos que causen colisiones con piso)
         local relCF = CFrame.new(unpack(data.CF))
         local cframeFinal = nuevoCentroCFrame * relCF 
         local sizeObjetivo = Vector3.new(unpack(data.Size))
         local nombreBloque = data.Type or "part_cube"
 
-        -- 2. MOVIMIENTO RÁPIDO Y SEGURO (NOCLIP)
-        -- Nos movemos 5 studs arriba y 3 atrás para tener visión perfecta sin tocar nada
-        local posicionObservador = cframeFinal * CFrame.new(0, 8, 5) 
-        hrp.CFrame = CFrame.lookAt(posicionObservador.Position, cframeFinal.Position)
-        
-        -- Pequeña pausa para que el servidor registre nuestra posición
+        -- 1. TP Cerca (Para cargar chunks y ver)
+        hrp.CFrame = CFrame.lookAt(cframeFinal.Position + Vector3.new(0, 10, 5), cframeFinal.Position)
         task.wait(0.05) 
 
-        -- 3. COLOCAR
-        PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
-        
-        -- 4. ESPERAR Y ESCALAR
-        local idDetectado = nil
-        local intentos = 0
-        local maxIntentos = 30 -- Esperamos hasta 3 segundos por bloque
-
-        while not idDetectado and intentos < maxIntentos do
-            if not procesoActivo then break end
-            
-            idDetectado = encontrarID(cframeFinal)
-            
-            if idDetectado then
-                PlotSystem:InvokeServer("scaleFurniture", idDetectado, cframeFinal, sizeObjetivo)
-                -- IMPORTANTE: Pintar después de escalar para asegurar propiedades
-                -- (Opcional si el juego soporta pintar)
-                break 
-            else
-                intentos = intentos + 1
-                task.wait(0.1)
-            end
-        end
+        -- 2. FUNCIÓN SEGURA
+        colocarBloqueSeguro(nombreBloque, cframeFinal, sizeObjetivo, i)
     end
 
-    desactivarNoclip() -- MODO DIOS: OFF
+    desactivarGodMode()
     hrp.Velocity = Vector3.new(0,0,0)
     hrp.CFrame = posOriginalPlayer
     procesoActivo = false
@@ -331,7 +354,8 @@ function limpiarFantasmas()
 end
 
 function vaciarMemoria() datosGuardados = {}; limpiarFantasmas(); notificar("♻️ Vacío") end
-function detenerProceso() procesoActivo = false; desactivarNoclip(); notificar("🛑 STOP") end
+function detenerProceso() procesoActivo = false; desactivarGodMode(); notificar("🛑 STOP") end
+
 function actualizarListaArchivos()
     for _, child in pairs(scrollList:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
     local s, a = pcall(function() return listfiles(CARPETA_PRINCIPAL) end)
@@ -341,7 +365,7 @@ function actualizarListaArchivos()
         if n:sub(-5)==".json" then
             local f = Instance.new("Frame", scrollList); f.Size=UDim2.new(1,0,0,25); f.BackgroundTransparency=1
             local b = Instance.new("TextButton", f); b.Text=n:sub(1,-6); b.Size=UDim2.new(0.75,0,1,0); b.BackgroundColor3=Color3.fromRGB(60,60,60); b.TextColor3=Color3.new(1,1,1)
-            b.MouseButton1Click:Connect(function() datosGuardados=HttpService:JSONDecode(readfile(r)); notificar("📂 Carga: "..#datosGuardados) end)
+            b.MouseButton1Click:Connect(function() datosGuardados=HttpService:JSONDecode(readfile(r)); notificar("📂 "..#datosGuardados.." items") end)
             local d = Instance.new("TextButton", f); d.Text="X"; d.Size=UDim2.new(0.2,0,1,0); d.Position=UDim2.new(0.8,0,0,0); d.BackgroundColor3=Color3.fromRGB(150,0,0); d.TextColor3=Color3.new(1,1,1)
             d.MouseButton1Click:Connect(function() delfile(r); actualizarListaArchivos() end)
         end
@@ -356,10 +380,10 @@ crearBoton("🎯 1. COPIAR (K)", Color3.fromRGB(0, 150, 100), 1, copiarEstructur
 crearBoton("👁️ VISUALIZAR (V)", Color3.fromRGB(100, 100, 0), 2, visualizarConstruccion)
 crearBoton("🏗️ 2. CONSTRUIR (B)", Color3.fromRGB(255, 140, 0), 3, construirReal)
 crearBoton("🛑 PARAR (X)", Color3.fromRGB(200, 50, 50), 4, detenerProceso)
-crearBoton("♻️ VACIAR MEMORIA (Z)", Color3.fromRGB(80, 80, 80), 5, vaciarMemoria)
+crearBoton("♻️ VACIAR (Z)", Color3.fromRGB(80, 80, 80), 5, vaciarMemoria)
 crearBoton("🗑️ LIMPIAR VISUAL", Color3.fromRGB(50, 50, 50), 6, limpiarFantasmas)
 
 tool.Equipped:Connect(function(m) actualizarListaArchivos(); m.Button1Down:Connect(function() if m.Target then bloqueSeleccionado=m.Target; highlightBox.Adornee=m.Target; notificar("🎯 "..m.Target.Name) end end); m.KeyDown:Connect(function(k) if k=="k" then copiarEstructura() elseif k=="v" then visualizarConstruccion() elseif k=="b" then construirReal() elseif k=="x" then detenerProceso() elseif k=="z" then vaciarMemoria() end end) end)
 tool.Unequipped:Connect(function() highlightBox.Adornee=nil; bloqueSeleccionado=nil end)
 actualizarListaArchivos()
-notificar("✅ v23: Noclip + Visualizer")
+notificar("✅ v25: Robust Build + Anti-Sit")
