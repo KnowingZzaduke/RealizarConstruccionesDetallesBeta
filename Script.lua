@@ -4,7 +4,7 @@ local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService") -- Añadido del Script 2
+local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local LocalPlayer = Players.LocalPlayer
@@ -21,10 +21,9 @@ local PlotSystem = Remotes:WaitForChild("PlotSystem")
 -- ⚙️ CONFIGURACIÓN
 -- ==========================================
 local CARPETA_PRINCIPAL = "MisConstruccionesRoblox"
-local RADIO_HORIZONTAL = 45
 local ALTURA_MAXIMA = 900
 local TRANSPARENCIA_MOLDE = 0.5
-local VELOCIDAD_VUELO = 400 -- Configuración del Script 2
+local VELOCIDAD_VUELO = 350 -- Velocidad del Tween
 
 if not isfolder(CARPETA_PRINCIPAL) then makefolder(CARPETA_PRINCIPAL) end
 
@@ -36,7 +35,7 @@ local procesoActivo = false
 
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "📐 Gestor V42 (Flight Mode)"
+tool.Name = "📐 Gestor V55 (Final Fly)"
 tool.Parent = LocalPlayer.Backpack
 
 local highlightBox = Instance.new("SelectionBox")
@@ -46,7 +45,7 @@ highlightBox.Parent = workspace
 highlightBox.Adornee = nil
 
 -- ==========================================
--- 🖥️ GUI (DISEÑO V19 RESTAURADO)
+-- 🖥️ GUI
 -- ==========================================
 if CoreGui:FindFirstChild("ClonadorProGUI") then CoreGui.ClonadorProGUI:Destroy() end
 
@@ -56,19 +55,20 @@ if syn and syn.protect_gui then syn.protect_gui(screenGui) elseif gethui then sc
 
 local toggleBtn = Instance.new("TextButton"); toggleBtn.Name = "ToggleMenu"; toggleBtn.Size = UDim2.new(0, 45, 0, 45); toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0); toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); toggleBtn.Text = "📐"; toggleBtn.TextSize = 25; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Parent = screenGui; Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
 
-local mainFrame = Instance.new("Frame"); mainFrame.Name = "MainFrame"; mainFrame.Size = UDim2.new(0, 230, 0, 420); mainFrame.Position = UDim2.new(0.15, 0, 0.25, 0); mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); mainFrame.Parent = screenGui; Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+local mainFrame = Instance.new("Frame"); mainFrame.Name = "MainFrame"; mainFrame.Size = UDim2.new(0, 230, 0, 460);
+mainFrame.Position = UDim2.new(0.15, 0, 0.25, 0); mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); mainFrame.Parent = screenGui; Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 
 local topBar = Instance.new("Frame"); topBar.Size = UDim2.new(1, 0, 0, 35); topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35); topBar.Parent = mainFrame; Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
-local title = Instance.new("TextLabel"); title.Text = "🏗️ V42 FLIGHT"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 100); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
+local title = Instance.new("TextLabel"); title.Text = "🏗️ V55 FLY+RECT"; title.Size = UDim2.new(0.8, 0, 1, 0); title.Position = UDim2.new(0.05, 0, 0, 0); title.BackgroundTransparency = 1; title.TextColor3 = Color3.fromRGB(0, 255, 100); title.Font = Enum.Font.GothamBold; title.TextSize = 14; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = topBar
 local closeMini = Instance.new("TextButton"); closeMini.Text = "-"; closeMini.Size = UDim2.new(0.15, 0, 1, 0); closeMini.Position = UDim2.new(0.85, 0, 0, 0); closeMini.BackgroundTransparency = 1; closeMini.TextColor3 = Color3.fromRGB(200, 200, 200); closeMini.TextSize = 20; closeMini.Font = Enum.Font.GothamBold; closeMini.Parent = topBar
 
-local nameInput = Instance.new("TextBox"); nameInput.PlaceholderText = "Nombre archivo..."; nameInput.Size = UDim2.new(0.65, 0, 0, 30); nameInput.Position = UDim2.new(0.05, 0, 0.12, 0); nameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45); nameInput.TextColor3 = Color3.new(1,1,1); nameInput.Parent = mainFrame; Instance.new("UICorner", nameInput)
-local btnSave = Instance.new("TextButton"); btnSave.Text = "💾"; btnSave.Size = UDim2.new(0.2, 0, 0, 30); btnSave.Position = UDim2.new(0.75, 0, 0.12, 0); btnSave.BackgroundColor3 = Color3.fromRGB(0, 120, 200); btnSave.TextColor3 = Color3.new(1,1,1); btnSave.Parent = mainFrame; Instance.new("UICorner", btnSave)
+local nameInput = Instance.new("TextBox"); nameInput.PlaceholderText = "Nombre archivo..."; nameInput.Size = UDim2.new(0.65, 0, 0, 30); nameInput.Position = UDim2.new(0.05, 0, 0.10, 0); nameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45); nameInput.TextColor3 = Color3.new(1,1,1); nameInput.Parent = mainFrame; Instance.new("UICorner", nameInput)
+local btnSave = Instance.new("TextButton"); btnSave.Text = "💾"; btnSave.Size = UDim2.new(0.2, 0, 0, 30); btnSave.Position = UDim2.new(0.75, 0, 0.10, 0); btnSave.BackgroundColor3 = Color3.fromRGB(0, 120, 200); btnSave.TextColor3 = Color3.new(1,1,1); btnSave.Parent = mainFrame; Instance.new("UICorner", btnSave)
 
-local scrollList = Instance.new("ScrollingFrame"); scrollList.Size = UDim2.new(0.9, 0, 0.25, 0); scrollList.Position = UDim2.new(0.05, 0, 0.22, 0); scrollList.BackgroundColor3 = Color3.fromRGB(35, 35, 35); scrollList.BorderSizePixel = 0; scrollList.Parent = mainFrame
+local scrollList = Instance.new("ScrollingFrame"); scrollList.Size = UDim2.new(0.9, 0, 0.25, 0); scrollList.Position = UDim2.new(0.05, 0, 0.19, 0); scrollList.BackgroundColor3 = Color3.fromRGB(35, 35, 35); scrollList.BorderSizePixel = 0; scrollList.Parent = mainFrame
 local layoutFiles = Instance.new("UIListLayout"); layoutFiles.Padding = UDim.new(0, 4); layoutFiles.Parent = scrollList
 
-local actionsFrame = Instance.new("Frame"); actionsFrame.Name = "ActionsFrame"; actionsFrame.Size = UDim2.new(0.9, 0, 0.48, 0); actionsFrame.Position = UDim2.new(0.05, 0, 0.50, 0); actionsFrame.BackgroundTransparency = 1; actionsFrame.Parent = mainFrame
+local actionsFrame = Instance.new("Frame"); actionsFrame.Name = "ActionsFrame"; actionsFrame.Size = UDim2.new(0.9, 0, 0.52, 0); actionsFrame.Position = UDim2.new(0.05, 0, 0.46, 0); actionsFrame.BackgroundTransparency = 1; actionsFrame.Parent = mainFrame
 local layoutActions = Instance.new("UIListLayout"); layoutActions.Padding = UDim.new(0, 6); layoutActions.SortOrder = Enum.SortOrder.LayoutOrder; layoutActions.Parent = actionsFrame
 local statusLabel = Instance.new("TextLabel"); statusLabel.Size = UDim2.new(1,0,0,15); statusLabel.Position = UDim2.new(0,0,0.96,0); statusLabel.BackgroundTransparency = 1; statusLabel.TextColor3 = Color3.new(0.5,0.5,0.5); statusLabel.TextSize = 10; statusLabel.Parent = mainFrame
 
@@ -86,7 +86,7 @@ toggleBtn.MouseButton1Click:Connect(toggleGUI); closeMini.MouseButton1Click:Conn
 -- ==========================================
 -- 🧠 FUNCIONES BASE
 -- ==========================================
-function notificar(texto) statusLabel.Text = texto; game:GetService("StarterGui"):SetCore("SendNotification", {Title="Builder V42", Text=texto, Duration=1.5}) end
+function notificar(texto) statusLabel.Text = texto; game:GetService("StarterGui"):SetCore("SendNotification", {Title="Builder V55", Text=texto, Duration=1.5}) end
 function redondearCFrame(cf) local x, y, z = cf.X, cf.Y, cf.Z; return CFrame.new(x, y, z) * (cf - cf.Position) end
 
 function obtenerNombreReal(p)
@@ -117,8 +117,18 @@ function obtenerRotacionJugador()
     return CFrame.new()
 end
 
+function limpiarFantasmas() for _, p in pairs(fantasmasCreados) do if p then p:Destroy() end end; fantasmasCreados = {} end
+
+function obtenerPivoteSuperior(parteSuelo, rotacionExtra)
+    if not parteSuelo then return CFrame.new() end
+    local cfBase = parteSuelo.CFrame
+    local cfSuperficie = cfBase * CFrame.new(0, parteSuelo.Size.Y / 2, 0)
+    if rotacionExtra then return CFrame.new(cfSuperficie.Position) * rotacionExtra end
+    return cfSuperficie
+end
+
 -- ==========================================
--- ✈️ SISTEMA DE MOVIMIENTO (DEL SCRIPT 2)
+-- ✈️ SISTEMA DE MOVIMIENTO (VUELO TWEEN)
 -- ==========================================
 local function volarHacia(destino)
     local character = LocalPlayer.Character
@@ -129,10 +139,8 @@ local function volarHacia(destino)
     local destinoFinal = destino
     local distancia = (root.Position - destinoFinal).Magnitude
     
-    if distancia > 2 then -- Pequeño umbral para evitar tweens micro
+    if distancia > 2 then
         local tiempo = distancia / VELOCIDAD_VUELO
-        
-        -- Creamos el Tween tal cual el Script 2
         local tweenInfo = TweenInfo.new(tiempo, Enum.EasingStyle.Linear)
         local tween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(destinoFinal)})
         
@@ -142,54 +150,85 @@ local function volarHacia(destino)
         tween.Completed:Wait()
     end
     
-    -- Aseguramos posición final
+    -- Al llegar, anclar para estabilidad total (estilo V43)
     root.Velocity = Vector3.zero
     root.CFrame = CFrame.new(destinoFinal)
     root.Anchored = true 
 end
 
 -- ==========================================
--- 🏗️ CONSTRUCCIÓN V42
+-- 👀 VISUALIZADOR
 -- ==========================================
-function construirV42()
+function visualizarSinConstruir()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona destino") end
     if #datosGuardados == 0 then return notificar("⚠️ Archivo vacío") end
     
+    limpiarFantasmas()
+    notificar("👀 Visualizando...")
+    
+    local rotacionDeseada = obtenerRotacionJugador()
+    local nuevoCentroCFrame = obtenerPivoteSuperior(bloqueSeleccionado, rotacionDeseada)
+    
+    for i, data in pairs(datosGuardados) do
+        local relCF = CFrame.new(unpack(data.CF))
+        local cframeFinal = redondearCFrame(nuevoCentroCFrame * relCF)
+        local sizeObjetivo = Vector3.new(unpack(data.Size))
+        
+        local ghost = Instance.new("Part"); ghost.Name = "Ghost_Preview"; ghost.Size = sizeObjetivo; ghost.CFrame = cframeFinal
+        ghost.Color = Color3.new(unpack(data.Color or {0.5,0.5,0.5})); ghost.Material = Enum.Material[data.Mat or "Plastic"]
+        ghost.Transparency = TRANSPARENCIA_MOLDE; ghost.Anchored = true; ghost.CanCollide = false; ghost.Parent = workspace
+        table.insert(fantasmasCreados, ghost)
+    end
+end
+
+-- ==========================================
+-- 🏗️ CONSTRUCCIÓN V55 (FLY + SORTED)
+-- ==========================================
+function construirV55()
+    if not bloqueSeleccionado then return notificar("⚠️ Selecciona el PISO BASE") end
+    if #datosGuardados == 0 then return notificar("⚠️ Archivo vacío") end
+    
+    limpiarFantasmas()
+    
     local character = LocalPlayer.Character
     local hrp = character:WaitForChild("HumanoidRootPart")
+    local posOriginalPlayer = hrp.CFrame -- Guardar posición para volver al final
     
     procesoActivo = true
-    notificar("🚀 Construyendo (Modo Vuelo)...")
-
-    local rotacionDeseada = obtenerRotacionJugador()
-    local nuevoCentroCFrame = CFrame.new(bloqueSeleccionado.Position) * rotacionDeseada
-    local posOriginalPlayer = hrp.CFrame
+    notificar("🚀 Construyendo (Vuelo)...")
     
-    -- Anclaje inicial
-    hrp.Anchored = true 
+    local rotacionDeseada = obtenerRotacionJugador()
+    local nuevoCentroCFrame = obtenerPivoteSuperior(bloqueSeleccionado, rotacionDeseada)
+    
+    -- === ORDENAR: MAYOR A MENOR (VOLUMEN) ===
+    table.sort(datosGuardados, function(a, b)
+        local volA = a.Size[1] * a.Size[2] * a.Size[3]
+        local volB = b.Size[1] * b.Size[2] * b.Size[3]
+        return volA > volB -- Primero los gigantes
+    end)
+
+    hrp.Anchored = true
 
     for i, data in pairs(datosGuardados) do
         if not procesoActivo then break end
 
-        -- 1. Cálculos
         local relCF = CFrame.new(unpack(data.CF))
-        local cframeFinal = nuevoCentroCFrame * relCF
-        cframeFinal = redondearCFrame(cframeFinal)
+        local cframeFinal = redondearCFrame(nuevoCentroCFrame * relCF)
         local sizeObjetivo = Vector3.new(unpack(data.Size))
         local nombreBloque = data.Type or "part_cube"
 
-        -- 2. Visualizador
+        -- Visualización (Ghost)
         local ghost = Instance.new("Part"); ghost.Name = "Ghost_Visual"; ghost.Size = sizeObjetivo; ghost.CFrame = cframeFinal
         ghost.Color = Color3.new(unpack(data.Color or {0.5,0.5,0.5})); ghost.Material = Enum.Material[data.Mat or "Plastic"]
         ghost.Transparency = TRANSPARENCIA_MOLDE; ghost.Anchored = true; ghost.CanCollide = false; ghost.Parent = workspace
         table.insert(fantasmasCreados, ghost)
 
-        -- 3. MOVIMIENTO (SISTEMA INTEGRADO DEL SCRIPT 2)
-        -- Calculamos posición objetivo (5 studs arriba del bloque)
-        local objetivoMovimiento = cframeFinal.Position + Vector3.new(0, 5, 0)
-        volarHacia(objetivoMovimiento)
+        -- === MOVIMIENTO: VUELO ENCIMA DEL BLOQUE ===
+        -- Volamos un poco arriba del objeto para verlo mientras se construye
+        local objetivoVuelo = cframeFinal.Position + Vector3.new(0, 10, 0)
+        volarHacia(objetivoVuelo)
         
-        -- 4. BUCLE DE PERSISTENCIA
+        -- === LOGICA DE CONSTRUCCION Y ESPERA ===
         local bloqueConfirmado = false
         local intentos = 0
         
@@ -200,25 +239,24 @@ function construirV42()
             if not idCheck then
                 PlotSystem:InvokeServer("placeFurniture", nombreBloque, cframeFinal)
                 
+                -- Esperar a que el servidor cree el objeto (Wait for response)
                 local esperaID = 0
                 local nuevoID = nil
                 while not nuevoID and esperaID < 15 do
                     task.wait(0.05)
-                    _, nuevoID = encontrarBloqueYSuID(cframeFinal)
+                    local _, idDetectado = encontrarBloqueYSuID(cframeFinal)
+                    nuevoID = idDetectado
                     esperaID = esperaID + 1
                 end
                 
                 if nuevoID then
+                    -- Escalar
                     PlotSystem:InvokeServer("scaleFurniture", nuevoID, cframeFinal, sizeObjetivo)
-                    task.wait(0.6)
+                    task.wait(0.4) -- Pausa técnica
                     
+                    -- Verificación final
                     local _, checkFinal = encontrarBloqueYSuID(cframeFinal)
-                    if checkFinal then
-                        bloqueConfirmado = true
-                    else
-                        notificar("⚠️ Reintentando bloque " .. i)
-                        task.wait(0.2)
-                    end
+                    if checkFinal then bloqueConfirmado = true else task.wait(0.2) end
                 else
                     task.wait(0.2)
                 end
@@ -226,47 +264,66 @@ function construirV42()
                 bloqueConfirmado = true
             end
         end
-        
         task.wait(0.05)
     end
 
     procesoActivo = false
-    hrp.Anchored = false 
-    hrp.CFrame = posOriginalPlayer 
-    notificar("✅ Terminado")
+    hrp.Anchored = false
+    hrp.CFrame = posOriginalPlayer -- Regresar al inicio
+    notificar("✅ Construcción Finalizada")
     task.delay(4, function() limpiarFantasmas() end)
 end
 
 -- ==========================================
--- 🎯 COPIAR
+-- 🎯 COPIAR (RECTANGULAR AREA / SELECTOR LIMIT)
 -- ==========================================
-function copiarEstructura()
-    if not bloqueSeleccionado then return notificar("⚠️ Selecciona centro") end
-    datosGuardados = {}
-    local origen = bloqueSeleccionado.CFrame
+function copiarAreaSelector()
+    if not bloqueSeleccionado then return notificar("⚠️ Selecciona el PISO BASE (Selector)") end
     
-    local function esValido(p)
-        if not p:IsA("BasePart") or p.Name == "Baseplate" or p.Name:find("Ghost") or p.Parent:FindFirstChild("Humanoid") then return false end
-        local distH = (Vector3.new(p.Position.X, 0, p.Position.Z) - Vector3.new(origen.Position.X, 0, origen.Position.Z)).Magnitude
-        local distV = p.Position.Y - origen.Position.Y
-        return distH <= RADIO_HORIZONTAL and distV >= -2 and distV <= ALTURA_MAXIMA
-    end
+    datosGuardados = {}
+    local sizePiso = bloqueSeleccionado.Size
+    local cfPiso = bloqueSeleccionado.CFrame
+    local origenCFrame = obtenerPivoteSuperior(bloqueSeleccionado)
+    
+    -- Límites definidos por el tamaño del bloque seleccionado (La herramienta de selección)
+    local limiteX = sizePiso.X / 2
+    local limiteZ = sizePiso.Z / 2
+    
+    -- Visualizar qué estamos copiando (Caja exacta del selector)
+    local visualBox = Instance.new("SelectionBox")
+    visualBox.Adornee = bloqueSeleccionado
+    visualBox.Color3 = Color3.new(1, 0.5, 0)
+    visualBox.Parent = workspace
+    Debris:AddItem(visualBox, 2)
 
-    local visual = Instance.new("Part"); visual.Shape = Enum.PartType.Cylinder; visual.Size = Vector3.new(1, RADIO_HORIZONTAL*2, RADIO_HORIZONTAL*2) 
-    visual.CFrame = origen * CFrame.Angles(0,0,math.rad(90)) + Vector3.new(0, 5, 0); visual.Transparency = 0.9; visual.Color = Color3.fromRGB(255, 255, 0); visual.Anchored = true; visual.CanCollide = false; visual.Parent = workspace; Debris:AddItem(visual, 2)
-
-    local c = 0
+    local count = 0
     for _, p in pairs(workspace:GetDescendants()) do
-        if esValido(p) and p ~= visual then
-            local rel = origen:Inverse() * p.CFrame
-            table.insert(datosGuardados, {Type = obtenerNombreReal(p), Size = {p.Size.X, p.Size.Y, p.Size.Z}, CF = {rel:GetComponents()}, Color = {p.Color.R, p.Color.G, p.Color.B}, Mat = p.Material.Name})
-            c = c + 1
+        if p:IsA("BasePart") and p ~= bloqueSeleccionado and p.Name ~= "Baseplate" and not p.Name:find("Ghost") and not p.Parent:FindFirstChild("Humanoid") then
+            -- Convertimos la posición de la parte al espacio local del piso
+            local posRelativa = cfPiso:PointToObjectSpace(p.Position)
+            
+            -- Verificamos si está DENTRO del rectángulo del piso seleccionado
+            local dentroX = math.abs(posRelativa.X) <= limiteX
+            local dentroZ = math.abs(posRelativa.Z) <= limiteZ
+            local alturaSobrePiso = posRelativa.Y - (sizePiso.Y / 2)
+            
+            if dentroX and dentroZ and alturaSobrePiso >= -0.5 and alturaSobrePiso <= ALTURA_MAXIMA then
+                -- Guardar relativo al pivote superior
+                local relGuardado = origenCFrame:Inverse() * p.CFrame
+                table.insert(datosGuardados, {
+                    Type = obtenerNombreReal(p), 
+                    Size = {p.Size.X, p.Size.Y, p.Size.Z}, 
+                    CF = {relGuardado:GetComponents()}, 
+                    Color = {p.Color.R, p.Color.G, p.Color.B}, 
+                    Mat = p.Material.Name
+                })
+                count = count + 1
+            end
         end
     end
-    notificar("✅ Copiados: " .. c)
+    notificar("✅ Copiado (Area Selector): " .. count)
 end
 
-function limpiarFantasmas() for _, p in pairs(fantasmasCreados) do if p then p:Destroy() end end; fantasmasCreados = {} end
 function vaciarMemoria() datosGuardados = {}; notificar("♻️ Memoria vacía") end
 function detenerProceso() procesoActivo = false; if LocalPlayer.Character then LocalPlayer.Character.HumanoidRootPart.Anchored = false end; notificar("🛑 Parando...") end
 
@@ -291,13 +348,32 @@ end
 btnSave.MouseButton1Click:Connect(function() if #datosGuardados>0 and nameInput.Text~="" then writefile(CARPETA_PRINCIPAL.."/"..nameInput.Text..".json", HttpService:JSONEncode(datosGuardados)); notificar("💾 Guardado"); actualizarListaArchivos() end end)
 
 local function crearBoton(t, c, o, f) local b = Instance.new("TextButton"); b.Text = t; b.Size = UDim2.new(1, 0, 0, 32); b.BackgroundColor3 = c; b.TextColor3 = Color3.new(1,1,1); b.LayoutOrder = o; b.Parent = actionsFrame; Instance.new("UICorner", b); b.MouseButton1Click:Connect(f) end
-crearBoton("🎯 1. COPIAR (K)", Color3.fromRGB(0, 150, 100), 1, copiarEstructura)
-crearBoton("🏗️ 2. CONSTRUIR (B)", Color3.fromRGB(0, 120, 200), 2, construirV42)
-crearBoton("🛑 PARAR (X)", Color3.fromRGB(200, 50, 50), 3, detenerProceso)
-crearBoton("♻️ VACIAR MEMORIA (Z)", Color3.fromRGB(80, 80, 80), 4, vaciarMemoria)
-crearBoton("🗑️ LIMPIAR GHOSTS", Color3.fromRGB(50, 50, 50), 5, limpiarFantasmas)
 
-tool.Equipped:Connect(function(mouse) actualizarListaArchivos(); mouse.Button1Down:Connect(function() if mouse.Target then bloqueSeleccionado = mouse.Target; highlightBox.Adornee = bloqueSeleccionado; notificar("🎯 Centro: " .. bloqueSeleccionado.Name) end end); mouse.KeyDown:Connect(function(key) if key=="k" then copiarEstructura() elseif key=="b" then construirV42() elseif key=="x" then detenerProceso() elseif key=="z" then vaciarMemoria() end end) end)
+crearBoton("🎯 1. COPIAR ÁREA (K)", Color3.fromRGB(0, 150, 100), 1, copiarAreaSelector)
+crearBoton("👁️ VISUALIZAR (V)", Color3.fromRGB(255, 170, 0), 2, visualizarSinConstruir)
+crearBoton("🏗️ 2. CONSTRUIR V55 (B)", Color3.fromRGB(0, 120, 200), 3, construirV55)
+crearBoton("🛑 PARAR (X)", Color3.fromRGB(200, 50, 50), 4, detenerProceso)
+crearBoton("♻️ VACIAR MEMORIA (Z)", Color3.fromRGB(80, 80, 80), 5, vaciarMemoria)
+crearBoton("🗑️ LIMPIAR GHOSTS", Color3.fromRGB(50, 50, 50), 6, limpiarFantasmas)
+
+tool.Equipped:Connect(function(mouse) 
+    actualizarListaArchivos()
+    mouse.Button1Down:Connect(function() 
+        if mouse.Target then 
+            bloqueSeleccionado = mouse.Target
+            highlightBox.Adornee = bloqueSeleccionado
+            notificar("🎯 Área Fijada: " .. bloqueSeleccionado.Name) 
+        end 
+    end)
+    mouse.KeyDown:Connect(function(key) 
+        if key=="k" then copiarAreaSelector() 
+        elseif key=="v" then visualizarSinConstruir()
+        elseif key=="b" then construirV55() 
+        elseif key=="x" then detenerProceso() 
+        elseif key=="z" then vaciarMemoria() 
+        end 
+    end) 
+end)
 tool.Unequipped:Connect(function() highlightBox.Adornee = nil; bloqueSeleccionado = nil end)
 actualizarListaArchivos()
-notificar("✅ V42: Vuelo Suave (Tween) Activado")
+notificar("✅ V55: Flight + Rect Copy")
