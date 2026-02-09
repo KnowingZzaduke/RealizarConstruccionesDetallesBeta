@@ -17,16 +17,24 @@ local Remotes = Connections:WaitForChild("Remotes")
 local PlotSystem = Remotes:WaitForChild("PlotSystem")
 
 -- ==========================================
--- ⚙️ CONFIGURACIÓN V59
+-- ⚙️ CONFIGURACIÓN V66 (SKIP MODE)
 -- ==========================================
 local CARPETA_PRINCIPAL = "MisConstruccionesRoblox"
-local ALTURA_MAXIMA = 900
+local SNAP_GRID = 0.05       
+local OFFSET_ALTURA = 0.1    
+local INTENTOS_MAXIMOS = 2   -- Reducido: si falla 2 veces, se rinde y sigue
 local VELOCIDAD_VUELO = 350
 
--- 🔥 AJUSTES CRÍTICOS ANTI-FALLO
-local SNAP_GRID = 0.05       -- Redondea posiciones a 0.05 studs
-local OFFSET_ALTURA = 0.1    -- Levanta todo 0.1 studs para evitar colisión con suelo
-local INTENTOS_MAXIMOS = 3   -- Cuántas veces intentar poner un bloque rebelde
+-- 🔥 LISTA NEGRA: Objetos que el script IGNORARÁ COMPLETAMENTE
+-- Escribe aquí los nombres exactos o partes del nombre que dan problemas.
+local LISTA_NEGRA = {
+    "LETRERO",
+    "SIGN",
+    "TEXT",
+    "CARTEL",
+    "Gamepass", -- Por si acaso
+    "VIP"
+}
 
 if not isfolder(CARPETA_PRINCIPAL) then makefolder(CARPETA_PRINCIPAL) end
 
@@ -36,11 +44,11 @@ local procesoActivo = false
 
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "📐 V59 (Grid Snap)"
+tool.Name = "📐 V66 (Skip Fix)"
 tool.Parent = LocalPlayer.Backpack
 
 local highlightBox = Instance.new("SelectionBox")
-highlightBox.Color3 = Color3.fromRGB(255, 170, 0)
+highlightBox.Color3 = Color3.fromRGB(255, 0, 0)
 highlightBox.LineThickness = 0.05
 highlightBox.Parent = workspace
 highlightBox.Adornee = nil
@@ -55,7 +63,7 @@ local statusLabel = Instance.new("TextLabel"); statusLabel.Size = UDim2.new(1,0,
 function notificar(t) statusLabel.Text = t end
 
 -- ==========================================
--- 🧠 MATEMÁTICA PURA (LA SOLUCIÓN)
+-- 🧠 FUNCIONES DE AYUDA
 -- ==========================================
 
 function redondear(num)
@@ -63,22 +71,14 @@ function redondear(num)
 end
 
 function limpiarCFrame(cf)
-    -- 1. Redondear Posición
-    local x = redondear(cf.X)
-    local y = redondear(cf.Y)
-    local z = redondear(cf.Z)
-    
-    -- 2. Redondear Rotación (Vital para paredes rectas)
+    local x, y, z = redondear(cf.X), redondear(cf.Y), redondear(cf.Z)
     local rx, ry, rz = cf:ToEulerAnglesYXZ()
-    local snapAngle = math.rad(90) -- Snap a 90 grados
+    local snapAngle = math.rad(90)
     local ry_clean = math.floor(ry / snapAngle + 0.5) * snapAngle
-    
-    -- Reconstruir CFrame limpio
     return CFrame.new(x, y, z) * CFrame.Angles(0, ry_clean, 0)
 end
 
 function obtenerNombreReal(parte)
-    -- Intenta sacar el ID o nombre correcto
     local modelo = parte.Parent
     if not modelo then return "part_cube" end
     local atts = {"ItemId", "FurnitureId", "ID", "id", "ItemName"}
@@ -105,147 +105,150 @@ function encontrarBloqueYSuID(posicionCFrame)
     return nil, nil
 end
 
+-- 🔥 FUNCIÓN DE FILTRADO
+function esObjetoProhibido(nombre)
+    local nombreMayus = string.upper(nombre)
+    for _, prohibido in pairs(LISTA_NEGRA) do
+        if string.find(nombreMayus, string.upper(prohibido)) then
+            return true
+        end
+    end
+    return false
+end
+
 -- ==========================================
--- 🏗️ CONSTRUCCIÓN V59
+-- 🏗️ CONSTRUCCIÓN V66 (CON PROTECCIÓN)
 -- ==========================================
-function construirV59()
+function construirV66()
     if not bloqueSeleccionado or #datosGuardados == 0 then return notificar("⚠️ Faltan datos") end
     
-    -- Punto de referencia
     local hrp = LocalPlayer.Character.HumanoidRootPart
     local ry_player = select(2, hrp.CFrame:ToEulerAnglesYXZ())
     local rotacionBase = CFrame.Angles(0, math.floor(ry_player / math.rad(90) + 0.5) * math.rad(90), 0)
-    
-    -- Centro superior del piso base seleccionado
     local centroBase = bloqueSeleccionado.CFrame * CFrame.new(0, bloqueSeleccionado.Size.Y/2, 0)
-    centroBase = CFrame.new(centroBase.Position) * rotacionBase -- Alineamos rotación con jugador
+    centroBase = CFrame.new(centroBase.Position) * rotacionBase 
     
     procesoActivo = true
     hrp.Anchored = true
-    notificar("🚀 Construyendo con Grid Snap...")
+    notificar("🚀 Construyendo (Saltando Letreros)...")
 
-    -- Ordenar: Primero los que están más abajo (Y), luego los más grandes
     table.sort(datosGuardados, function(a, b) 
-        if math.abs(a.CF[2] - b.CF[2]) > 0.5 then
-            return a.CF[2] < b.CF[2] -- Primero lo de abajo
-        end
-        return (a.Size[1]*a.Size[3]) > (b.Size[1]*b.Size[3]) -- Luego lo grande
+        if math.abs(a.CF[2] - b.CF[2]) > 0.5 then return a.CF[2] < b.CF[2] end
+        return (a.Size[1]*a.Size[3]) > (b.Size[1]*b.Size[3]) 
     end)
 
     for i, data in pairs(datosGuardados) do
         if not procesoActivo then break end
         
+        local nombreBloque = data.Type
+
+        -- 🛑 1. CHECK DE LISTA NEGRA
+        if esObjetoProhibido(nombreBloque) then
+            warn("🚫 SALTO INTELIGENTE: Ignorando objeto prohibido [" .. nombreBloque .. "]")
+            notificar("🚫 Saltando: " .. nombreBloque)
+            task.wait(0.05) -- Pequeña pausa para no saturar
+            continue -- SALTA AL SIGUIENTE OBJETO INMEDIATAMENTE
+        end
+
         local relCF = CFrame.new(unpack(data.CF))
         local cfFinalBruto = centroBase * relCF
-        
-        -- APLICAR LIMPIEZA MATEMÁTICA Y OFFSET
         local cframeObjetivo = limpiarCFrame(cfFinalBruto) + Vector3.new(0, OFFSET_ALTURA, 0)
         local sizeObjetivo = Vector3.new(unpack(data.Size))
-        local nombreBloque = data.Type
         
-        -- Mover jugador cerca para cargar chunk
+        -- Mover jugador
         hrp.CFrame = CFrame.new(cframeObjetivo.Position + Vector3.new(0, 15, 0))
         task.wait(0.05)
 
         local idConfirmada = nil
         local intentos = 0
         
-        -- BUCLE DE REINTENTO (Si falla, sube un poquito y prueba de nuevo)
         while not idConfirmada and intentos < INTENTOS_MAXIMOS do
-            local cfIntento = cframeObjetivo + Vector3.new(0, intentos * 0.2, 0) -- Sube 0.2 studs cada fallo
+            local cfIntento = cframeObjetivo + Vector3.new(0, intentos * 0.2, 0)
             
-            -- Verificar si ya existe antes de poner
             local _, check = encontrarBloqueYSuID(cfIntento)
-            if check then 
-                idConfirmada = check
-                break
+            if check then idConfirmada = check; break end
+
+            -- 🛑 2. PROTECCIÓN PCALL (EVITA CRASHEOS)
+            local success, retorno = pcall(function()
+                return PlotSystem:InvokeServer("placeFurniture", nombreBloque, cfIntento)
+            end)
+            
+            if not success then
+                warn("⚠️ Error del servidor al poner " .. nombreBloque .. ". Saltando...")
+                break -- Rompe el while, va al siguiente objeto
             end
 
-            -- Invocar servidor
-            local retorno = PlotSystem:InvokeServer("placeFurniture", nombreBloque, cfIntento)
-            
-            -- Verificar retorno directo
             if retorno then
                 if typeof(retorno)=="string" then idConfirmada = retorno
                 elseif typeof(retorno)=="Instance" then idConfirmada = retorno:GetAttribute("Id") end
             end
             
-            -- Si servidor no dio ID, buscar manualmente
             if not idConfirmada then
-                task.wait(0.2) -- Dar tiempo al servidor
+                task.wait(0.2)
                 _, idConfirmada = encontrarBloqueYSuID(cfIntento)
             end
             
-            if not idConfirmada then
-                print("⚠️ Fallo intento "..(intentos+1).." con "..nombreBloque..". Reintentando más arriba...")
-                intentos = intentos + 1
-            end
+            if not idConfirmada then intentos = intentos + 1 end
         end
 
-        -- ESCALAR FINAL
         if idConfirmada then
-            -- Pequeña pausa para asegurar que el bloque existe en servidor
             task.wait(0.1)
-            PlotSystem:InvokeServer("scaleFurniture", idConfirmada, cframeObjetivo, sizeObjetivo)
-            -- Restaurar posición original (bajarlo si lo subimos en intentos)
-            if intentos > 0 then
-                -- Opcional: intentar bajarlo a la posición original tras escalar
-                 PlotSystem:InvokeServer("scaleFurniture", idConfirmada, cframeObjetivo - Vector3.new(0, intentos*0.2, 0), sizeObjetivo)
-            end
-        else
-            warn("❌ IMPOSIBLE COLOCAR: " .. nombreBloque)
+            pcall(function() -- Protegemos también el escalado
+                PlotSystem:InvokeServer("scaleFurniture", idConfirmada, cframeObjetivo, sizeObjetivo)
+                if intentos > 0 then
+                     PlotSystem:InvokeServer("scaleFurniture", idConfirmada, cframeObjetivo - Vector3.new(0, intentos*0.2, 0), sizeObjetivo)
+                end
+            end)
         end
     end
     
     procesoActivo = false
     hrp.Anchored = false
-    notificar("✅ Construcción V59 Finalizada")
+    notificar("✅ Terminado")
 end
 
 -- ==========================================
--- 🎯 COPIAR V59 (LIMPIO)
+-- 🎯 COPIAR V66
 -- ==========================================
 function copiarLimpio()
     if not bloqueSeleccionado then return notificar("⚠️ Selecciona Base") end
     datosGuardados = {}
-    
     local cfBase = bloqueSeleccionado.CFrame * CFrame.new(0, bloqueSeleccionado.Size.Y/2, 0)
     local sizeBase = bloqueSeleccionado.Size
-    local limX, limZ = sizeBase.X/2 + 0.5, sizeBase.Z/2 + 0.5 -- Margen de tolerancia
+    local limX, limZ = sizeBase.X/2 + 0.5, sizeBase.Z/2 + 0.5 
     
     local c = 0
     for _, p in pairs(workspace:GetDescendants()) do
         if p:IsA("BasePart") and p~=bloqueSeleccionado and p.Name~="Baseplate" and not p.Name:find("Ghost") and p.Transparency<1 then
             local posRel = bloqueSeleccionado.CFrame:PointToObjectSpace(p.Position)
-            
-            -- Validar si está sobre la base
             if math.abs(posRel.X) <= limX and math.abs(posRel.Z) <= limZ and posRel.Y >= -1 then
-                
                 local nombreReal = obtenerNombreReal(p)
-                local relCF = cfBase:Inverse() * p.CFrame
                 
-                table.insert(datosGuardados, {
-                    Type = nombreReal,
-                    Size = {p.Size.X, p.Size.Y, p.Size.Z},
-                    CF = {relCF:GetComponents()}
-                })
-                c=c+1
+                -- Opcional: No guardamos letreros al copiar para ahorrar espacio
+                if not esObjetoProhibido(nombreReal) then
+                    local relCF = cfBase:Inverse() * p.CFrame
+                    table.insert(datosGuardados, {
+                        Type = nombreReal,
+                        Size = {p.Size.X, p.Size.Y, p.Size.Z},
+                        CF = {relCF:GetComponents()}
+                    })
+                    c=c+1
+                end
             end
         end
     end
-    notificar("✅ Copiado: " .. c .. " items")
-    writefile(CARPETA_PRINCIPAL.."/temp_v59.json", HttpService:JSONEncode(datosGuardados))
+    notificar("✅ Copiado: " .. c .. " items (Limpios)")
+    writefile(CARPETA_PRINCIPAL.."/temp_v66.json", HttpService:JSONEncode(datosGuardados))
 end
 
--- CONTROLES
 tool.Equipped:Connect(function(m)
     m.Button1Down:Connect(function() if m.Target then bloqueSeleccionado=m.Target; highlightBox.Adornee=m.Target; notificar("Base: "..m.Target.Name) end end)
     m.KeyDown:Connect(function(k)
         if k=="k" then copiarLimpio()
         elseif k=="b" then 
-            if isfile(CARPETA_PRINCIPAL.."/temp_v59.json") then
-                datosGuardados=HttpService:JSONDecode(readfile(CARPETA_PRINCIPAL.."/temp_v59.json"))
-                construirV59()
+            if isfile(CARPETA_PRINCIPAL.."/temp_v66.json") then
+                datosGuardados=HttpService:JSONDecode(readfile(CARPETA_PRINCIPAL.."/temp_v66.json"))
+                construirV66()
             end
         elseif k=="x" then procesoActivo=false
         end
